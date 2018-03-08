@@ -1,8 +1,9 @@
 import mdp
 import random
 import time
-import mdp_iterator as imdp
+import mdp_iter as imdp
 import mdp_utils
+import mdp_aprox as mc
 
 #
 # Simple game: at  initial  state  (s0)  we  have  2  actions  'stay' and 'quit', if we
@@ -20,14 +21,18 @@ class stay_quit_t(mdp.mdp_t):
     def actions(self, s):
         # we return same actions for all states, since s1 is end state and we have just 2 states
         return ['stay', 'quit']
+    def start_state(self):
+        return 's0'
     def is_end(self, s):
-        return s == 1
+        return s == 's1'
     def transitions(self, s, a):
-        if s == 0 :
-            return [(2.0/3.0, 4.0, 0), (1.0 - 2.0/3.0, 4.0, 1)] if a == 'stay' else [(1.0, 10.0, 1)]
+        if s == 's0' :
+            return [(2.0/3.0, 4.0, 's0'), (1.0 - 2.0/3.0, 4.0, 's1')] if a == 'stay' else [(1.0, 10.0, 's1')]
         return [] # for s1 there are no transitions
     def size(self):
         return 2
+    def get_state(self, id):
+        return 's0' if id == 0 else 's1'
 
 class stay_policy_t(mdp.policy_t):
     def action(self, s):
@@ -50,8 +55,20 @@ if __name__ == '__main__':
     print("<quit> policy evaluation (must be very close to 10):")
     print(imdp.policy_evaluation(m, quit_policy_t(m)))
     print("random policy evaluation (must be very close to 10.5):")
-    print(imdp.policy_evaluation(m, mdp.random_policy_t(m), 1000, 0.0)) # something is wrong here, I'm not getting 10.5 :(
+    mdp_utils.run_with_policy(m, mdp.random_policy_t(m), '', 10000)
 
     # calculate optimal policy
     print("optimal policy for each state:")
     print(imdp.value_iterator(m))
+
+    # calculate optimal policy
+    print("approximate transitions/rewards and then do optimal policy evaluation")
+    ea = mdp_utils.run_with_policy(m, mdp.random_policy_t(m), '', 10000)
+    me = mc.approximate_model(ea, 0, 1.0)
+    pme = imdp.value_iterator(me)
+    print("calculated policy:")
+    print(pme)
+    pe = mdp.dict_policy_t(me, pme)
+    print("policy evaluation:")
+    print(imdp.policy_evaluation(me, pe))
+

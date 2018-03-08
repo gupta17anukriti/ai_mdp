@@ -1,62 +1,59 @@
 import mdp
 import random
-import collections
 import mdp_utils
 import time
+import mdp_aprox as mdpa
+import mdp_iter as mdpi
 
 class volcano_crossing_t(mdp.mdp_t):
-    def __init__(self, rows = 3, cols = 4, rs = ((2, 0, 2, True), (0, 2, -50, True), (0, 1, -50, True), (0, 3, 20, True))):
+    def __init__(self, slip = 0.1, disc = 1.0):
+        rows, cols = 3, 4
+        rs = [(2, 0, 2, True), (0, 2, -50, True), (1, 2, -50, True), (0, 3, 20, True)] # [(row, col, reward, is_end)]
         map = [None] * rows
         for i in range(rows):
             map[i] = [(0.0, False)] * cols # (reward, is it end state)
         for r in rs:
             map[r[0]][r[1]] = (r[2], r[3])
         self.map = map
-        self.shape, self.slip, self.disc, self.start = (rows, cols), 0.1, 1.0, (rows - 2, 0)
+        self.shape, self.slip, self.disc, self.start = (rows, cols), slip, disc, (rows - 2, 0)
+        self._action_moves = {'S': (1, 0), 'N':(-1, 0), 'W':(0, -1), 'E':(0, 1)}
+        self._actions = [k for k in self._action_moves.keys()]
 
     def start_state(self):
         return self.start
 
     def actions(self, s):
-        return ['S', 'N', 'W', 'E']
+        return self._actions
 
     def is_end(self, s):
+        return self.map[s[0]][s[1]][1];
         return self._end(s[0], s[1])
 
     def _r(self, row, col):
         return self.map[row][col][0];
 
-    def _end(self, row, col):
-        return self.map[row][col][1];
-
     def _invalid(self, s):
         return s[0] < 0 or s[1] < 0 or s[0] >= self.shape[0] or s[1] >= self.shape[1]
 
     def _next(self, s, a):
-        if a == 'N':
-            n = (s[0] - 1, s[1])
-        elif a == 'S':
-            n = (s[0] + 1, s[1])
-        elif a == 'W':
-            n = (s[0], s[1] - 1)
-        else:
-            n = (s[0], s[1] + 1)
+        inc = self._action_moves[a]
+        n = (s[0] + inc[0],s[1] + inc[1])
         return s if self._invalid(n) else n
 
     # this should return array of (probability, reward, next state) tuples
     def transitions(self, s, a):
-        if self.is_end(s):
-            return []
-        td = collections.defaultdict(float)
+        assert(not self.is_end(s))
+        td = []
         for v in self.actions(s):
-            td[self._next(s, v)] += (1.0 - self.slip if v == a else 0) + self.slip / 4
-        return [(p, self._r(n[0], n[1]), n) for n, p in td.items()]
+            n = self._next(s, v)
+            td.append(((1.0 - self.slip if v == a else 0) + self.slip / 4, self._r(n[0], n[1]), n));
+        return td
 
     def discount(self):
-        return self.disc;
+        return self.disc
 
     def get_state(self, id):
-        return (int(id / self.shape[0]), id % self.shape[1])
+        return (int(id / self.shape[1]), id % self.shape[1])
 
     def size(self):
         return self.shape[0] * self.shape[1]
@@ -64,6 +61,27 @@ class volcano_crossing_t(mdp.mdp_t):
 if __name__ == '__main__':
     random.seed(time.time())
     m = volcano_crossing_t()
-    mdp_utils.run_with_policy(m, mdp.random_policy_t(m), 'random policy')
-    mdp_utils.print_episode(m, mdp.random_policy_t(m), 'example episode for random policy')
-
+    policy = mdp.random_policy_t(m)
+    print("---")
+    print("my policy1:")
+    mp = {(1, 0): 'E', (0, 0): 'E', (0, 1): 'S', (1, 1): 'S', (2, 1): 'E', (2, 2): 'E', (2, 3): 'N', (1, 3): 'N'}
+    print(mp)
+    print("my policy 1 evaluation:")
+    print(mdpi.policy_evaluation(m, mdp.dict_policy_t(m, mp)))
+    print("---")
+    print("my policy2:")
+    mp = {(1, 0): 'S', (0, 0): 'S', (1, 1): 'S', (0, 1): 'S', (2, 1): 'E', (2, 2): 'E', (2, 3): 'N', (1, 3): 'N'}
+    print(mp)
+    print("my policy 2 evaluation:")
+    print(mdpi.policy_evaluation(m, mdp.dict_policy_t(m, mp)))
+    print("---")
+    mdp_utils.run_with_policy(m, policy, 'random policy')
+    print("---")
+    print("monte carlo evaluation")
+    ea = mdp_utils.run_with_policy(m, policy, '')
+    me = mdpa.approximate_model(ea, m.start_state(), m.discount())
+    print("estimated optimal policy:")
+    pe = mdpi.value_iterator(me)
+    print(pe)
+    print("policy evaluation:")
+    print(mdpi.policy_evaluation(me, mdp.dict_policy_t(me, pe)))

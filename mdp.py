@@ -12,12 +12,12 @@ class mdp_t(object):
     # transition to next state for (state, action) pair, returns (reward, next_state)
     def transition(self, s, a):
         ta = self.transitions(s, a) # get list of all possible transitions for (state, action)
-        t = None;                   # random state which we select based on probability distribution in 'ta'
-        p = 0.0;                     # probability threshold for current state
+        t = None                   # random state which we select based on probability distribution in 'ta'
+        p = 0.0                    # probability threshold for current state
         for i in range(len(ta)):
             t, p = ta[i], p + ta[i][0]
             if i == len(ta) - 1 or random.uniform(0.0, 1.0) < p:
-                break;
+                break
         return (t[1], t[2])
     # this should return array of (probability, reward, next state) tuples
     def transitions(self, s, a):
@@ -56,6 +56,14 @@ class random_policy_t(policy_t):
     def action(self, s):
         aa = self.mdp.actions(s)
         return aa[random.randint(0, len(aa) - 1)]
+
+# policy from dictionary {state: action}
+class dict_policy_t(policy_t):
+    def __init__(self, mdp, d):
+        self.mdp = mdp
+        self.d = d
+    def action(self, s):
+        return self.d[s]
 
 # return total reward (utility) of episode array
 def episode_utility(m, e):
