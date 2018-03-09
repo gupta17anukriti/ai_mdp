@@ -6,7 +6,7 @@ import mdp_aprox as mdpa
 import mdp_iter as mdpi
 
 class volcano_crossing_t(mdp.mdp_t):
-    def __init__(self, slip = 0.1, disc = 1.0):
+    def __init__(self, slip = 0.3, disc = 1.0):
         rows, cols = 3, 4
         rs = [(2, 0, 2, True), (0, 2, -50, True), (1, 2, -50, True), (0, 3, 20, True)] # [(row, col, reward, is_end)]
         map = [None] * rows

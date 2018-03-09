@@ -1,5 +1,5 @@
 import sys
-import random
+from random import *
 
 # abstract class for Markov Decision Process (MDP)
 class mdp_t(object):
@@ -12,13 +12,13 @@ class mdp_t(object):
     # transition to next state for (state, action) pair, returns (reward, next_state)
     def transition(self, s, a):
         ta = self.transitions(s, a) # get list of all possible transitions for (state, action)
-        t = None                   # random state which we select based on probability distribution in 'ta'
-        p = 0.0                    # probability threshold for current state
+        t = None                    # random state which we select based on probability distribution in 'ta'
+        p, r = 0.0, uniform(0, 1)   # probability threshold for current state
         for i in range(len(ta)):
             t, p = ta[i], p + ta[i][0]
-            if i == len(ta) - 1 or random.uniform(0.0, 1.0) < p:
+            if r < p:
                 break
-        return (t[1], t[2])
+        return t[1], t[2]
     # this should return array of (probability, reward, next state) tuples
     def transitions(self, s, a):
         pass
@@ -55,7 +55,7 @@ class policy_t(object):
 class random_policy_t(policy_t):
     def action(self, s):
         aa = self.mdp.actions(s)
-        return aa[random.randint(0, len(aa) - 1)]
+        return aa[randint(0, len(aa) - 1)]
 
 # policy from dictionary {state: action}
 class dict_policy_t(policy_t):
