@@ -74,3 +74,66 @@ def approximate_model(episodes, start, discount):
             nd.actions[a].append((p[(s, a, n)], rew[(s, a, n)], n))
     m = montecarlo_mdp_t(start, states, discount)
     return m
+
+# approximate Q-values by ising on-policy model-free Monte Carlo
+# returns dictionary of {(state, action): Qp(state, action)}
+def approximate_q_values_monte_carlo(episodes, discount, eta = None):
+    Q = defaultdict(float)
+    N = defaultdict(int)
+    for e in episodes:
+        u = 0.0 # current utility
+        for i in range(len(e) - 4, 0, -3):
+            s, a, r, sn = e[i], e[i + 1], e[i + 2], e[i + 3]
+            prediction = Q[(s, a)]  # prediction
+            target = r + discount * u
+            u = target
+            _eta = eta
+            if _eta is None:
+                _eta = 1.0 / (1.0 + N[(s, a)])
+                N[(s, a)] += 1
+            Q[(s, a)] = (1 - _eta) * prediction + _eta * target
+    return Q
+
+def approximate_q_values_sarsa(episodes, discount, eta = None):
+    Q, N = defaultdict(float), defaultdict(int)
+    def Qp(s, a):
+        return 0 if a is None or (s, a) not in Q else Q[(s, a)]
+    for e in episodes:
+        an = None
+        for i in range(len(e) - 4, 0, -3):
+            s, a, r, sn = e[i], e[i + 1], e[i + 2], e[i + 3]
+            _eta = eta
+            if _eta is None:
+                _eta = 1.0 / (1.0 + N[(s, a)])
+                N[(s, a)] += 1
+            prediction = Qp(s, a)
+            target = r + discount * Qp(sn, an)
+            Q[(s, a)] = (1 - _eta) * prediction + _eta * target
+    return Q
+
+def approximate_q_values_qlearning(episodes, discount, eta = None):
+    Qopt = defaultdict(float)
+    Vopt = defaultdict(float)
+    Popt = defaultdict()
+    N    = defaultdict(int)
+    for e in episodes:
+        an = None
+        for i in range(len(e) - 4, 0, -3):
+            s, a, r, sn = e[i], e[i + 1], e[i + 2], e[i + 3]
+            nu = 1.0 / (1 + N[(s, a)])
+            Qopt[(s, a)] = Qopt[(s, a)] * (1.0 - nu) + nu * (r + discount * Vopt[sn])
+            N[(s, a)] += 1
+            if s not in Vopt or Qopt[s, a] > Vopt[s]:
+                Vopt[s] = Qopt[s, a]
+                Popt[s] = a
+    return Qopt, Vopt, Popt
+
+def q_values_opt_policy(qs):
+    SA = defaultdict()        # optimal actions for each state
+    SAQ = defaultdict(float)  # Q values for optimal actions for each state
+    for sa, q in qs.items():
+        s, a = sa
+        if s not in SA or q > SAQ[s]:
+            SA[s] = a
+            SAQ[s] = q
+    return SA

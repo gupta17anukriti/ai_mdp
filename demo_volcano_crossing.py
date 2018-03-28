@@ -6,7 +6,7 @@ import mdp_aprox as mdpa
 import mdp_iter as mdpi
 
 class volcano_crossing_t(mdp.mdp_t):
-    def __init__(self, slip = 0.3, disc = 1.0):
+    def __init__(self, slip = 0.1, disc = 1.0):
         rows, cols = 3, 4
         rs = [(2, 0, 2, True), (0, 2, -50, True), (1, 2, -50, True), (0, 3, 20, True)] # [(row, col, reward, is_end)]
         map = [None] * rows
@@ -61,27 +61,29 @@ class volcano_crossing_t(mdp.mdp_t):
 if __name__ == '__main__':
     random.seed(time.time())
     m = volcano_crossing_t()
+
+    print("\nvalue iterator policy:")
+    pd = mdpi.value_iterator(m)
+    print(pd)
+    print("evaluation:")
+    print(mdpi.policy_evaluation(m, mdp.dict_policy_t(m, pd), 10000))
+
+
+    print("\n\n")
     policy = mdp.random_policy_t(m)
-    print("---")
-    print("my policy1:")
-    mp = {(1, 0): 'E', (0, 0): 'E', (0, 1): 'S', (1, 1): 'S', (2, 1): 'E', (2, 2): 'E', (2, 3): 'N', (1, 3): 'N'}
-    print(mp)
-    print("my policy 1 evaluation:")
-    print(mdpi.policy_evaluation(m, mdp.dict_policy_t(m, mp)))
-    print("---")
-    print("my policy2:")
-    mp = {(1, 0): 'S', (0, 0): 'S', (1, 1): 'S', (0, 1): 'S', (2, 1): 'E', (2, 2): 'E', (2, 3): 'N', (1, 3): 'N'}
-    print(mp)
-    print("my policy 2 evaluation:")
-    print(mdpi.policy_evaluation(m, mdp.dict_policy_t(m, mp)))
-    print("---")
-    mdp_utils.run_with_policy(m, policy, 'random policy')
-    print("---")
+    mdp_utils.run_with_policy(m, policy, 'random policy', 10000)
     print("monte carlo evaluation")
-    ea = mdp_utils.run_with_policy(m, policy, '')
+    ea = mdp_utils.run_with_policy(m, policy, '', 10000)
     me = mdpa.approximate_model(ea, m.start_state(), m.discount())
     print("estimated optimal policy:")
     pe = mdpi.value_iterator(me)
     print(pe)
     print("policy evaluation:")
-    print(mdpi.policy_evaluation(me, mdp.dict_policy_t(me, pe)))
+    print(mdpi.policy_evaluation(me, mdp.dict_policy_t(me, pe), 10000))
+
+    # compare policies to see if we have a match
+    failed = mdp_utils.compare_dictionaries(pd, pe)
+    if failed:
+        print("Monte Carlo estimation FAILED")
+    else:
+        print("Monte Carlo estimation succeeded")

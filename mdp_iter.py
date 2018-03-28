@@ -2,7 +2,7 @@ from mdp import *
 from collections import *
 
 EPSILON = 10e-6
-UEPSILON = 1 - EPSILON
+UEPSILON = 0.9
 
 # given MDP and policy, calculate value (V) of each state. this is, in essence aproximate solution of
 # system of linear equations (which we could also do using elimination, but it is slower)
@@ -23,7 +23,7 @@ def policy_evaluation(m: mdp_t, p: policy_t, niter = 1000, epsilon = EPSILON):
         V0 = V1
     return V0
 
-# given MDP calculate optimal policy (array of actions for each state index)
+# given MDP calculate optimal policy (dictionary {state: action})
 def value_iterator(m: mdp_t, niter = 1000, epsilon = EPSILON):
     V0, P, N = defaultdict(float), defaultdict(), m.size()  # optimal state values, optimal policy
     def Vopt(s):                                            # current state value for optimal policy

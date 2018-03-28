@@ -50,25 +50,25 @@ if __name__ == '__main__':
     mdp_utils.run_with_policy(m, quit_policy_t(m), '<quit> policy (must be exactly 10)')
 
     # use policy evaluation to estimate utility of each policy
-    print("<stay> policy evaluation (must be very close to 12):")
+    print("\n<stay> policy evaluation (must be very close to 12):")
     print(imdp.policy_evaluation(m, stay_policy_t(m)))
-    print("<quit> policy evaluation (must be very close to 10):")
+    print("\n<quit> policy evaluation (must be very close to 10):")
     print(imdp.policy_evaluation(m, quit_policy_t(m)))
-    print("random policy evaluation (must be very close to 10.5):")
+    print("\nrandom policy evaluation (must be very close to 10.5):")
     mdp_utils.run_with_policy(m, mdp.random_policy_t(m), '', 10000)
 
     # calculate optimal policy
-    print("optimal policy for each state:")
+    print("\noptimal policy for each state:")
     print(imdp.value_iterator(m))
 
     # calculate optimal policy
-    print("approximate transitions/rewards and then do optimal policy evaluation")
+    print("\napproximate transitions/rewards and then do optimal policy evaluation")
     ea = mdp_utils.run_with_policy(m, mdp.random_policy_t(m), '', 10000)
     me = mc.approximate_model(ea, 0, 1.0)
     pme = imdp.value_iterator(me)
-    print("calculated policy:")
+    print("\ncalculated policy:")
     print(pme)
     pe = mdp.dict_policy_t(me, pme)
-    print("policy evaluation:")
+    print("\npolicy evaluation:")
     print(imdp.policy_evaluation(me, pe))
 

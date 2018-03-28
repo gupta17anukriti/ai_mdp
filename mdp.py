@@ -50,6 +50,10 @@ class policy_t(object):
             e += [a, t[0], t[1]]
             s = t[1]                # advance to next state
         return e
+    def update_parameters(self, s, a, sn, r):
+        pass
+    def end_update_parameters(self):
+        pass
 
 # random policy (for each state we select uniformly random action)
 class random_policy_t(policy_t):
