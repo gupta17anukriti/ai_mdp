@@ -50,9 +50,9 @@ def approximate_model(episodes, start, discount):
             rew[(s, a, n)] += r
             sa[(s, a)] += 1
             san[(s, a, n)] += 1
-            if (not (s, a) in sas):
+            if not (s, a) in sas:
                 sas[(s, a)] = set()
-            sas[(s, a)].add(n)
+            sas[(s, a)].add_cache(n)
     # calculate probability and reward for each (s, a, n) tuple
     for k, r in rew.items():
         rew[k] = r / san[k]
@@ -77,7 +77,7 @@ def approximate_model(episodes, start, discount):
 
 # approximate Q-values by ising on-policy model-free Monte Carlo
 # returns dictionary of {(state, action): Qp(state, action)}
-def approximate_q_values_monte_carlo(episodes, discount, eta = None):
+def qvalues_monte_carlo(episodes, discount, eta = None):
     Q = defaultdict(float)
     N = defaultdict(int)
     for e in episodes:
@@ -94,7 +94,7 @@ def approximate_q_values_monte_carlo(episodes, discount, eta = None):
             Q[(s, a)] = (1 - _eta) * prediction + _eta * target
     return Q
 
-def approximate_q_values_sarsa(episodes, discount, eta = None):
+def qvalues_sarsa(episodes, discount, eta = None):
     Q, N = defaultdict(float), defaultdict(int)
     def Qp(s, a):
         return 0 if a is None or (s, a) not in Q else Q[(s, a)]
@@ -111,22 +111,28 @@ def approximate_q_values_sarsa(episodes, discount, eta = None):
             Q[(s, a)] = (1 - _eta) * prediction + _eta * target
     return Q
 
-def approximate_q_values_qlearning(episodes, discount, eta = None):
+def qvalues_qlearning_ex(episodes, discount, eta = None):
     Qopt = defaultdict(float)
     Vopt = defaultdict(float)
     Popt = defaultdict()
     N    = defaultdict(int)
     for e in episodes:
-        an = None
         for i in range(len(e) - 4, 0, -3):
             s, a, r, sn = e[i], e[i + 1], e[i + 2], e[i + 3]
-            nu = 1.0 / (1 + N[(s, a)])
-            Qopt[(s, a)] = Qopt[(s, a)] * (1.0 - nu) + nu * (r + discount * Vopt[sn])
-            N[(s, a)] += 1
+            _eta = eta
+            if _eta is None:
+                _eta = 1.0 / (1.0 + N[(s, a)])
+                N[(s, a)] += 1
+            prediction = Qopt[(s, a)]
+            target = r + discount * Vopt[sn]
+            Qopt[(s, a)] = (1.0 - _eta) * prediction + _eta * target
             if s not in Vopt or Qopt[s, a] > Vopt[s]:
                 Vopt[s] = Qopt[s, a]
                 Popt[s] = a
     return Qopt, Vopt, Popt
+
+def qvalues_qlearning(episodes, discount, eta = None):
+    return qvalues_qlearning_ex(episodes, discount, eta)[0]
 
 def q_values_opt_policy(qs):
     SA = defaultdict()        # optimal actions for each state

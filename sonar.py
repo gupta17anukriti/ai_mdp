@@ -6,7 +6,7 @@ import sys
 red = (255,0,0)
 green = (0,255,0)
 blue = (0,0,255)
-darkBlue = (0,0,128)
+darkBlue = (0, 0,128)
 white = (255,255,255)
 black = (0,0,0)
 pink = (255,200,200)
@@ -20,7 +20,6 @@ def get_line():
     ln = ser.readline()
     ln = ln.decode("utf-8")
     return ln
-
 
 while (True):
    print(get_line(), end='')

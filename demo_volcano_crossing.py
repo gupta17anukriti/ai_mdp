@@ -53,7 +53,7 @@ class volcano_crossing_t(mdp.mdp_t):
         return self.disc
 
     def get_state(self, id):
-        return (int(id / self.shape[1]), id % self.shape[1])
+        return int(id / self.shape[1]), id % self.shape[1]
 
     def size(self):
         return self.shape[0] * self.shape[1]

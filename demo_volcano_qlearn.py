@@ -2,7 +2,7 @@ from demo_volcano_crossing import *
 
 if __name__ == '__main__':
     random.seed(time.time())
-
+    eta = 0.5
     print("approximate q-value using Q-learning")
     m = volcano_crossing_t()
     policy1 = mdpi.value_iterator(m)
@@ -10,7 +10,7 @@ if __name__ == '__main__':
     print(policy1)
     po = mdp.dict_policy_t(m, policy1)
     ea = mdp_utils.run_with_policy(m, po, '', 10000)
-    qs = mdpa.approximate_q_values_qlearning(ea, m.discount())
+    qs = mdpa.qvalues_qlearning_ex(ea, m.discount(), eta)
     failed = mdp_utils.compare_dictionaries(policy1, qs[2])
     if failed:
         print("Estimation FAILED")
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     m = volcano_crossing_t()
     po = mdp.random_policy_t(m)
     ea = mdp_utils.run_with_policy(m, po, '', 10000)
-    qs = mdpa.approximate_q_values_qlearning(ea, m.discount())
+    qs = mdpa.qvalues_qlearning_ex(ea, m.discount(), eta)
     failed = mdp_utils.compare_dictionaries(policy1, qs[2])
     if failed:
         print("Estimation FAILED")

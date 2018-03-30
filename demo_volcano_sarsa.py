@@ -2,7 +2,7 @@ from demo_volcano_crossing import *
 
 if __name__ == '__main__':
     random.seed(time.time())
-
+    eta = 0.5
     print("approximate q-value using SARSA")
     m = volcano_crossing_t()
     policy1 = mdpi.value_iterator(m)
@@ -10,7 +10,7 @@ if __name__ == '__main__':
     print(policy1)
     po = mdp.dict_policy_t(m, policy1)
     ea = mdp_utils.run_with_policy(m, po, '', 10000)
-    qs = mdpa.approximate_q_values_sarsa(ea, m.discount())
+    qs = mdpa.qvalues_sarsa(ea, m.discount(), eta)
     ## print(qs)
     print("optimal policy through model free monte carlo:")
     policy2 = mdpa.q_values_opt_policy(qs)
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     m = volcano_crossing_t()
     po = mdp.random_policy_t(m)
     ea = mdp_utils.run_with_policy(m, po, '', 10000)
-    qs = mdpa.approximate_q_values_sarsa(ea, m.discount())
+    qs = mdpa.qvalues_sarsa(ea, m.discount(), eta)
     print("optimal policy through model free monte carlo:")
     policy3 = mdpa.q_values_opt_policy(qs)
     print(policy3)
