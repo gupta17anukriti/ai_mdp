@@ -1,6 +1,13 @@
 import random, numpy, math, gym
 from linear_predict import *
 
+MEMORY_CAPACITY = 10000
+BATCH_SIZE = 64
+GAMMA = 0.99
+MAX_EPSILON = 1
+MIN_EPSILON = 0.01
+LAMBDA = 0.001  # speed of decay
+
 class brain_t:
     def __init__(self):
         self.eta = 0.01
@@ -32,14 +39,13 @@ class brain_t:
     def add_cache(self, sample):
         self.samples.append(sample)
 
-        if len(self.samples) > 10000: # keep 10000 max states in cache
+        if len(self.samples) > MEMORY_CAPACITY: # keep 10000 max states in cache
             self.samples.pop(0)
 
     # get array of ( s, a, r, s_ )
     def sample_cache(self, n):
         n = min(n, len(self.samples))
         return random.sample(self.samples, n)
-
 
 class agent_t:
     steps = 0
@@ -59,13 +65,12 @@ class agent_t:
     def observe(self, sample):
         self.brain.add_cache(sample)
         self.steps += 1
-        # slowly decrease Epsilon based on our eperience
-        self.epsilon = 0.01 + (1 - 0.01) * math.exp(-0.001 * self.steps)
+        self.epsilon = MIN_EPSILON + (MAX_EPSILON - MIN_EPSILON) * math.exp(-LAMBDA * self.steps)
 
     def replay(self):
         brain = self.brain
-        batch = self.brain.sample_cache(128)       # get random samples from cache (up to 128)
-        batchLen = len(batch)                      # get number of random samples
+        batch = self.brain.sample_cache(BATCH_SIZE) # get random samples from cache (up to 128)
+        batchLen = len(batch)                       # get number of random samples
 
         no_state = numpy.zeros(self.STATE_SIZE)    # number of states
 
@@ -79,13 +84,17 @@ class agent_t:
         y = numpy.zeros((batchLen, brain.ACTION_SIZE))
 
         for i in range(batchLen):
-            s, a, r, s_ = batch[i]
+            o = batch[i]
+            s = o[0]
+            a = o[1]
+            r = o[2]
+            s_ = o[3]
 
             t = p[i]
             if s_ is None:
                 t[a] = r
             else:
-                t[a] = r + 0.001 * numpy.amax(p_[i])
+                t[a] = r + GAMMA * numpy.amax(p_[i])
 
             x[i] = s
             y[i] = t
@@ -123,8 +132,6 @@ class Environment:
                 break
 
         print("Total reward:", R)
-        if R > 150:
-            print(agent.brain.W)
 
 
 # -------------------- MAIN ----------------------------
