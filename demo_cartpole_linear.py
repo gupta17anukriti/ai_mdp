@@ -22,7 +22,7 @@ class brain_t:
         self.eta *= 0.999
         for i in range(self.ACTION_SIZE):
             points = [(self.phi(x[j]), y[j][i]) for j in range(len(x))]
-            self.W[i] = stochastic_gradient_descent(sG, points, self.FEATURE_SIZE, self.W[i], self.eta, 100)
+            self.W[i] = stochastic_gradient_descent(G, points, self.FEATURE_SIZE, self.W[i], self.eta, 100)
 
     def phi(self, px):
         s, ds, a, da = px
