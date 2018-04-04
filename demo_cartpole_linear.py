@@ -1,28 +1,28 @@
 import random, numpy, math, gym
 from linear_predict import *
 
-MEMORY_CAPACITY = 10000
-BATCH_SIZE = 64
-GAMMA = 0.99
-MAX_EPSILON = 1
-MIN_EPSILON = 0.01
-LAMBDA = 0.001  # speed of decay
+MEMORY_CAPACITY = 100000
+BATCH_SIZE      = 128
+GAMMA           = 0.999
+MAX_EPSILON     = 1
+MIN_EPSILON     = 0.01
+LAMBDA          = 0.001  # speed of decay
+ETA             = 0.01
+FEATURE_SIZE    = 13
+ACTION_SIZE     = 2
+STATE_SIZE      = 4
 
 class brain_t:
     def __init__(self):
-        self.eta = 0.01
-        self.FEATURE_SIZE = 13
-        self.ACTION_SIZE = 2
         self.samples = []
-        self.W = [None] * self.FEATURE_SIZE
+        self.W = [None] * FEATURE_SIZE
         for i in range(len(self.W)):
-            self.W[i] = np.random.uniform(-0.0001, 0.0001, size = self.FEATURE_SIZE)
+            self.W[i] = np.random.uniform(-0.001, 0.001, size = FEATURE_SIZE)
 
     def train(self, x, y):
-        self.eta *= 0.999
-        for i in range(self.ACTION_SIZE):
+        for i in range(ACTION_SIZE):
             points = [(self.phi(x[j]), y[j][i]) for j in range(len(x))]
-            self.W[i] = stochastic_gradient_descent(G, points, self.FEATURE_SIZE, self.W[i], self.eta, 100)
+            self.W[i] = stochastic_gradient_descent(G, points, FEATURE_SIZE, self.W[i], ETA, 100)
 
     def phi(self, px):
         s, ds, a, da = px
@@ -33,7 +33,7 @@ class brain_t:
 
     def predict_single(self, s):
         W, phi = self.W, self.phi
-        return [W[j].dot(phi(s)) for j in range(self.ACTION_SIZE)]
+        return [W[j].dot(phi(s)) for j in range(ACTION_SIZE)]
 
     # stored as ( s, a, r, s_ )
     def add_cache(self, sample):
@@ -53,8 +53,6 @@ class agent_t:
 
     def __init__(self):
         self.brain = brain_t()
-        self.STATE_SIZE = 4
-        self.last_sample = None
 
     def act(self, s):
         if random.random() < self.epsilon:
@@ -72,16 +70,15 @@ class agent_t:
         batch = self.brain.sample_cache(BATCH_SIZE) # get random samples from cache (up to 128)
         batchLen = len(batch)                       # get number of random samples
 
-        no_state = numpy.zeros(self.STATE_SIZE)    # number of states
-
+        no_state = numpy.zeros(STATE_SIZE)
         states = numpy.array([o[0] for o in batch])
         states_ = numpy.array([no_state if o[3] is None else o[3] for o in batch])
 
         p = brain.predict(states)
         p_ = brain.predict(states_)
 
-        x = numpy.zeros((batchLen, self.STATE_SIZE))
-        y = numpy.zeros((batchLen, brain.ACTION_SIZE))
+        x = numpy.zeros((batchLen, STATE_SIZE))
+        y = numpy.zeros((batchLen, ACTION_SIZE))
 
         for i in range(batchLen):
             o = batch[i]
@@ -114,9 +111,7 @@ class Environment:
 
         while True:
             self.env.render()
-
             a = agent.act(s)
-
             s_, r, done, info = self.env.step(a)
 
             if done:  # terminal state
@@ -127,25 +122,16 @@ class Environment:
 
             s = s_
             R += r
-
             if done:
                 break
 
         print("Total reward:", R)
 
 
-# -------------------- MAIN ----------------------------
-PROBLEM = 'CartPole-v0'
-env = Environment(PROBLEM)
-
+env = Environment('CartPole-v0')
 stateCnt = env.env.observation_space.shape[0]
 actionCnt = env.env.action_space.n
 
 agent = agent_t()
-
-try:
-    while True:
-        env.run(agent)
-finally:
-    pass
-    # agent.brain.model.save("cartpole-basic.h5")
+while True:
+    env.run(agent)
