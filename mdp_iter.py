@@ -17,7 +17,7 @@ def policy_evaluation(m: mdp_t, p: policy_t, niter = 1000, epsilon = EPSILON):
             if not m.is_end(s):
                 ta = m.transitions(s, p.action(s))       # get list of actions for a state
                 if len(ta) > 0:
-                    V1[s] = sum(p * (r + m.discount() * V0[n]) for p, r, n in ta)
+                    V1[s] = sum(p * (r + m.discount() * V0[sn]) for p, r, sn in ta)
         if epsilon > 0.0 and max(abs(V0[S(k)] - V1[S(k)]) for k in range(N)) < epsilon:
             break
         V0 = V1
@@ -29,7 +29,8 @@ def value_iterator(m: mdp_t, niter = 1000, epsilon = EPSILON):
     def Vopt(s):                                            # current state value for optimal policy
         return V0[s]
     def Qopt(s, a):                                         # optimal Q-value for state-action pair
-        return sum(p * (r + (m.discount() * UEPSILON * Vopt(n))) for p, r, n in m.transitions(s, a))
+        discount = m.discount() * UEPSILON
+        return sum(p * (r + (discount * Vopt(sn))) for p, r, sn in m.transitions(s, a))
     def S(i):
         return m.get_state(i)
     for i in range(niter):

@@ -52,7 +52,7 @@ def approximate_model(episodes, start, discount):
             san[(s, a, n)] += 1
             if not (s, a) in sas:
                 sas[(s, a)] = set()
-            sas[(s, a)].add_cache(n)
+            sas[(s, a)].add(n)
     # calculate probability and reward for each (s, a, n) tuple
     for k, r in rew.items():
         rew[k] = r / san[k]

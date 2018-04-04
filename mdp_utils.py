@@ -1,6 +1,16 @@
 import mdp
 import random
 
+# convert episode array to string (for debugging and output)
+def episode_to_str(m, e, rounding = 2, add_utility = True):
+    s = str(e[0]) + ";"
+    for i in range(1, len(e) - 1, 3):
+        # action, reward, state
+        s += str(e[i]) + "," + str(round(e[i + 1], rounding)) + "," + str(e[i + 2]) + ";";
+    if add_utility:
+        s += " ({})".format(round(mdp.episode_utility(m, e), rounding))
+    return s
+
 def run_with_policy(m, policy, descr, cnt = 1000, print_episode = False):
     print("\nrunning " + str(cnt) + " episode(s) with " + descr + ":")
     u = 0.0
