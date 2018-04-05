@@ -1,12 +1,12 @@
 import random, numpy, math, gym
 from linear_predict import *
 
-MEMORY_CAPACITY = 100000
-BATCH_SIZE      = 128
+MEMORY_CAPACITY = 10000
+BATCH_SIZE      = 256
 GAMMA           = 0.999
 MAX_EPSILON     = 1
 MIN_EPSILON     = 0.01
-LAMBDA          = 0.001  # speed of decay
+LAMBDA          = 0.002  # speed of decay
 ETA             = 0.01
 FEATURE_SIZE    = 13
 ACTION_SIZE     = 2
@@ -17,7 +17,7 @@ class brain_t:
         self.samples = []
         self.W = [None] * FEATURE_SIZE
         for i in range(len(self.W)):
-            self.W[i] = np.random.uniform(-0.001, 0.001, size = FEATURE_SIZE)
+            self.W[i] = np.random.uniform(-0.0001, 0.0001, size=FEATURE_SIZE)
 
     def train(self, x, y):
         for i in range(ACTION_SIZE):
@@ -39,7 +39,7 @@ class brain_t:
     def add_cache(self, sample):
         self.samples.append(sample)
 
-        if len(self.samples) > MEMORY_CAPACITY: # keep 10000 max states in cache
+        if len(self.samples) > MEMORY_CAPACITY:
             self.samples.pop(0)
 
     # get array of ( s, a, r, s_ )
@@ -104,6 +104,7 @@ class Environment:
     def __init__(self, problem):
         self.problem = problem
         self.env = gym.make(problem)
+        self.conWin = 0
 
     def run(self, agent):
         s = self.env.reset()
@@ -117,11 +118,21 @@ class Environment:
             if done:  # terminal state
                 s_ = None
 
-            agent.observe((s, a, r, s_))
-            agent.replay()
+            if self.conWin < 3:
+                agent.observe((s, a, r, s_))
+                agent.replay()
+            else:
+                agent.epsilon = 0 # stop learning
 
             s = s_
             R += r
+
+            if not self.conWin < 3:
+                if R == 200:
+                    self.conWin += 1
+                else:
+                    self.conWin = 0
+
             if done:
                 break
 
