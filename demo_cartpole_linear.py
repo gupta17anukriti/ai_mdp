@@ -38,7 +38,6 @@ class brain_t:
     # stored as ( s, a, r, s_ )
     def add_cache(self, sample):
         self.samples.append(sample)
-
         if len(self.samples) > MEMORY_CAPACITY:
             self.samples.pop(0)
 
@@ -65,10 +64,9 @@ class agent_t:
         self.steps += 1
         self.epsilon = MIN_EPSILON + (MAX_EPSILON - MIN_EPSILON) * math.exp(-LAMBDA * self.steps)
 
-    def replay(self):
         brain = self.brain
         batch = self.brain.sample_cache(BATCH_SIZE) # get random samples from cache (up to 128)
-        batchLen = len(batch)                       # get number of random samples
+        batch_len = len(batch)                       # get number of random samples
 
         no_state = numpy.zeros(STATE_SIZE)
         states = numpy.array([o[0] for o in batch])
@@ -77,23 +75,23 @@ class agent_t:
         p = brain.predict(states)
         p_ = brain.predict(states_)
 
-        x = numpy.zeros((batchLen, STATE_SIZE))
-        y = numpy.zeros((batchLen, ACTION_SIZE))
+        x = numpy.zeros((batch_len, STATE_SIZE))
+        y = numpy.zeros((batch_len, ACTION_SIZE))
 
-        for i in range(batchLen):
-            o = batch[i]
-            s = o[0]
-            a = o[1]
-            r = o[2]
-            s_ = o[3]
-
+        for i in range(batch_len):
+            # s - current state, a - action we take, r - reward we get, s_ is next state
+            s, a, r, s_ = batch[i]
+            # this is array of Qopt(s, a), we have just 2 actions so this array consists of [Qopt(s, a0), Qopt(s, a1)]
+            # so t is target that we initialize with w.phi(state)
             t = p[i]
+            # now, for action 'a' we update 'target' as: Q(s, a) = Reward(s, a, s') + Discount * Vopt(s')
             if s_ is None:
                 t[a] = r
             else:
                 t[a] = r + GAMMA * numpy.amax(p_[i])
-
+            # x are states, but we will replace it with phi(x)
             x[i] = s
+            # y are targets
             y[i] = t
 
         self.brain.train(x, y)
@@ -104,7 +102,7 @@ class Environment:
     def __init__(self, problem):
         self.problem = problem
         self.env = gym.make(problem)
-        self.conWin = 0
+        self.win_count = 0
 
     def run(self, agent):
         s = self.env.reset()
@@ -115,23 +113,13 @@ class Environment:
             a = agent.act(s)
             s_, r, done, info = self.env.step(a)
 
-            if done:  # terminal state
+            if done:  # end state
                 s_ = None
 
-            if self.conWin < 3:
-                agent.observe((s, a, r, s_))
-                agent.replay()
-            else:
-                agent.epsilon = 0 # stop learning
+            agent.observe((s, a, r, s_))
 
             s = s_
             R += r
-
-            if not self.conWin < 3:
-                if R == 200:
-                    self.conWin += 1
-                else:
-                    self.conWin = 0
 
             if done:
                 break
@@ -140,8 +128,8 @@ class Environment:
 
 
 env = Environment('CartPole-v0')
-stateCnt = env.env.observation_space.shape[0]
-actionCnt = env.env.action_space.n
+##stateCnt = env.env.observation_space.shape[0]
+#actionCnt = env.env.action_space.n
 
 agent = agent_t()
 while True:
