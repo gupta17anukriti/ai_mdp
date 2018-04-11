@@ -33,6 +33,7 @@ def grad_train_loss(points, w):
 
 # this function returns feature vector for our 'circle radius predictor'
 def phi(x1, x2):
+    # return np.array([x1, x2, 1.0])
     return np.array([x1, x2, x1**2, x2**2, 1.0])
 
 # stochastic gradient descent is less accurate, but faster than gradient_descent
