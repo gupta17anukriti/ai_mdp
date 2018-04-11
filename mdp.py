@@ -9,10 +9,11 @@ class mdp_t(object):
     def transitions(self, s, a): pass       # return array of (probability, reward, next state) tuples
     def transition(self, s, a):
         ta = self.transitions(s, a)
-        p, r, t = 0.0, uniform(0, 1), ta[len(ta) - 1]
+        p, r, t = 0.0, uniform(0, 1), None
         for i in range(len(ta)):
             t, p = ta[i], p + ta[i][0]
-            if r < p: break
+            if r <= p:
+                break
         return t[1], t[2]                   # returns (reward, next_state)
     def discount(self): return 1.0
     # size and get_state methods are used only for policy iterator and value iterator algorithms (which are not episode based)

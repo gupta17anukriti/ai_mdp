@@ -64,7 +64,7 @@ if __name__ == '__main__':
     # calculate optimal policy
     print("\napproximate transitions/rewards and then do optimal policy evaluation")
     ea = mdp_utils.run_with_policy(m, mdp.random_policy_t(m), '', 10000)
-    me = mc.approximate_model(ea, 0, 1.0)
+    me = mc.approximate_model(ea, 's0', 1.0)
     pme = imdp.value_iterator(me)
     print("\ncalculated policy:")
     print(pme)
