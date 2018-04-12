@@ -53,6 +53,9 @@ class agent_t:
     def __init__(self):
         self.brain = brain_t()
 
+    def stop_training(self):
+        self.epsilon = 0
+
     def act(self, s):
         if random.random() < self.epsilon:
             return random.randint(0, 1)
@@ -60,6 +63,8 @@ class agent_t:
             return numpy.argmax(self.brain.predict_single(s))
 
     def observe(self, sample):
+        if self.epsilon == 0:
+            return
         self.brain.add_cache(sample)
         self.steps += 1
         self.epsilon = MIN_EPSILON + (MAX_EPSILON - MIN_EPSILON) * math.exp(-LAMBDA * self.steps)
@@ -83,16 +88,17 @@ class agent_t:
             s, a, r, s_ = batch[i]
             # this is array of Qopt(s, a), we have just 2 actions so this array consists of [Qopt(s, a0), Qopt(s, a1)]
             # so t is target that we initialize with w.phi(state)
-            t = p[i]
+            target = p[i]
             # now, for action 'a' we update 'target' as: Q(s, a) = Reward(s, a, s') + Discount * Vopt(s')
             if s_ is None:
-                t[a] = r
+                target[a] = r
             else:
-                t[a] = r + GAMMA * numpy.amax(p_[i])
-            # x are states, but we will replace it with phi(x)
+                Vopt_ = numpy.amax(p_[i])
+                target[a] = r + GAMMA * Vopt_
+            # x are states, but we will replace it with phi(x) in brain.train(x, y)
             x[i] = s
             # y are targets
-            y[i] = t
+            y[i] = target
 
         self.brain.train(x, y)
 
@@ -125,12 +131,12 @@ class Environment:
                 break
 
         print("Total reward:", R)
+        if R == 200:
+            agent.stop_training()
 
 
-env = Environment('CartPole-v0')
-##stateCnt = env.env.observation_space.shape[0]
-#actionCnt = env.env.action_space.n
-
-agent = agent_t()
-while True:
-    env.run(agent)
+if __name__ == '__main__':
+    env = Environment('CartPole-v0')
+    agent = agent_t()
+    while True:
+        env.run(agent)
