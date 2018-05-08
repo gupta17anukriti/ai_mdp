@@ -22,17 +22,17 @@ class stay_quit_t(mdp.mdp_t):
         # we return same actions for all states, since s1 is end state and we have just 2 states
         return ['stay', 'quit']
     def start_state(self):
-        return 's0'
+        return 'in'
     def is_end(self, s):
-        return s == 's1'
+        return s == 'end'
     def transitions(self, s, a):
-        if s == 's0' :
-            return [(2.0/3.0, 4.0, 's0'), (1.0 - 2.0/3.0, 4.0, 's1')] if a == 'stay' else [(1.0, 10.0, 's1')]
+        if s == 'in' :
+            return [(2.0/3.0, 4.0, 'in'), (1.0 - 2.0/3.0, 4.0, 'end')] if a == 'stay' else [(1.0, 10.0, 'end')]
         return [] # for s1 there are no transitions
     def size(self):
         return 2
     def get_state(self, id):
-        return 's0' if id == 0 else 's1'
+        return 'in' if id == 0 else 'end'
 
 class stay_policy_t(mdp.policy_t):
     def action(self, s):
@@ -45,9 +45,9 @@ class quit_policy_t(mdp.policy_t):
 if __name__ == '__main__':
     random.seed(time.time())
     m = stay_quit_t()
-    mdp_utils.run_with_policy(m, mdp.random_policy_t(m), 'random policy (should be close to 10.5)')
-    mdp_utils.run_with_policy(m, stay_policy_t(m), '<stay> policy (should be close to 12)')
-    mdp_utils.run_with_policy(m, quit_policy_t(m), '<quit> policy (must be exactly 10)')
+    mdp_utils.run_with_policy(m, mdp.random_policy_t(m), 'random policy (should be close to 10.5)', 10000)
+    mdp_utils.run_with_policy(m, stay_policy_t(m), '<stay> policy (should be close to 12)', 10000)
+    mdp_utils.run_with_policy(m, quit_policy_t(m), '<quit> policy (must be exactly 10)', 10000)
 
     # use policy evaluation to estimate utility of each policy
     print("\n<stay> policy evaluation (must be very close to 12):")
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     print("\n<quit> policy evaluation (must be very close to 10):")
     print(imdp.policy_evaluation(m, quit_policy_t(m)))
     print("\nrandom policy evaluation (must be very close to 10.5):")
-    mdp_utils.run_with_policy(m, mdp.random_policy_t(m), '', 10000)
+    mdp_utils.run_with_policy(m, mdp.random_policy_t(m), '', 1000)
 
     # calculate optimal policy
     print("\noptimal policy for each state:")
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     # calculate optimal policy
     print("\napproximate transitions/rewards and then do optimal policy evaluation")
     ea = mdp_utils.run_with_policy(m, mdp.random_policy_t(m), '', 10000)
-    me = mc.approximate_model(ea, 's0', 1.0)
+    me = mc.approximate_model(ea, 'in', 1.0)
     pme = imdp.value_iterator(me)
     print("\ncalculated policy:")
     print(pme)

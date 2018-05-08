@@ -6,7 +6,7 @@ import mdp_aprox as mdpa
 import mdp_iter as mdpi
 
 class volcano_crossing_t(mdp.mdp_t):
-    def __init__(self, slip = 0.1, disc = 1.0):
+    def __init__(self, slip = 0.8, disc = 1.0):
         rows, cols = 3, 4
         rs = [(2, 0, 2, True), (0, 2, -50, True), (1, 2, -50, True), (0, 3, 20, True)] # [(row, col, reward, is_end)]
         map = [None] * rows
@@ -61,27 +61,30 @@ class volcano_crossing_t(mdp.mdp_t):
 if __name__ == '__main__':
     random.seed(time.time())
     m = volcano_crossing_t()
+    iters = 100000
 
-    print("\nvalue iterator policy:")
+    print("\n\nvalue iterator policy (determine best policy based on full model):")
     pd = mdpi.value_iterator(m)
     print(pd)
-    print("evaluation:")
-    print(mdpi.policy_evaluation(m, mdp.dict_policy_t(m, pd), 10000))
 
+    print("\npolicy evaluation (based on policy, determine value for each state):")
+    print(mdpi.policy_evaluation(m, mdp.dict_policy_t(m, pd), iters))
 
-    print("\n\n")
+    print("\n\n\n")
     policy = mdp.random_policy_t(m)
-    mdp_utils.run_with_policy(m, policy, 'random policy', 10000)
-    print("monte carlo evaluation")
-    ea = mdp_utils.run_with_policy(m, policy, '', 10000)
+    mdp_utils.run_with_policy(m, policy, 'random policy', iters)
+
+    print("\nmodel based monte-carlo (based on some episodes estimate (approximate probabilities and rewards) mdp model):")
+    ea = mdp_utils.run_with_policy(m, policy, '', iters)
     me = mdpa.approximate_model(ea, m.start_state(), m.discount())
-    print("estimated optimal policy:")
+    print("\nnow, having estimation of model run value iterator and determine approximated best policy:")
     pe = mdpi.value_iterator(me)
     print(pe)
-    print("policy evaluation:")
-    print(mdpi.policy_evaluation(me, mdp.dict_policy_t(me, pe), 10000))
+    print("\npolicy evaluation (based on policy, determine value for each state):")
+    print(mdpi.policy_evaluation(me, mdp.dict_policy_t(me, pe), iters))
 
     # compare policies to see if we have a match
+    print("now we compare model based policy and model based monte-carlo policy. they should match:")
     failed = mdp_utils.compare_dictionaries(pd, pe)
     if failed:
         print("Monte Carlo estimation FAILED")

@@ -9,8 +9,8 @@ pto     = 2.0
 epsilon = 1e-5
 
 # our predictor is just dot product of features and weights
-def predict(p, w):
-    return np.dot(p, w)
+def predict(phi, w):
+    return np.dot(phi, w)
 
 # square loss for single data point p = (phi, y) for given weight vector
 def loss(p, w):
@@ -37,8 +37,7 @@ def phi(x1, x2):
     return np.array([x1, x2, x1**2, x2**2, 1.0])
 
 # stochastic gradient descent is less accurate, but faster than gradient_descent
-def stochastic_gradient_descent(points, func_grad_of_loss = grad_loss,
-                                func_train_loss = training_loss, iter = 1000, step = 0.01):
+def stochastic_gradient_descent(points, func_grad_of_loss = grad_loss, func_train_loss = training_loss, iter = 1000, step = 0.01):
     d = len(points[0][0])
     w = np.array([0.0] * d)
     for i in range(0, iter):
@@ -104,7 +103,7 @@ def generate_prediction(w, size = 1000, show = True):
         show_data(data, "Test dataset")
 
 # this is our main function, we generate training data, train based on them using gradient
-# descent and then do predictions. we should see similar pictures for both train data and
+# descent and then do predictions. we sh    ould see similar pictures for both train data and
 # test data which will indicate success
 def test_predictor():
     data = generate_training_data()

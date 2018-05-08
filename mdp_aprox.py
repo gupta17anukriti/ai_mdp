@@ -36,6 +36,7 @@ class mdp_node_t(object):
 
 # estimate rewards and probabilities based on provided episodes and return 'estimated' mdp
 # this is type of monte-carlo model approximation
+# episode: s1,a1,r1,s2;a2,r2,s3;a3,r3,s4;
 def approximate_model(episodes, start, discount):
     sa = defaultdict(int)    # {(state, action): count}
     sas = defaultdict()      # {(state, action): set of next states}

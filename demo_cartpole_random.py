@@ -10,12 +10,13 @@ def basic_policy(obs, reward, info):
     return 0 if angle < 0 else 1
 
 if __name__ == "__main__":
-    num_iter = 100000
+    num_iter = 100
     totals = []
     for i in range(num_iter):
         env = gym.make("CartPole-v0")
         obs = env.reset()
-        action = basic_policy(obs, 0, None)
+        # action = basic_policy(obs, 0, None)
+        action = random_action(obs, 0, None)
         done = False
         episode_rewards = 0.0
         while not done:
