@@ -2,7 +2,7 @@ from mdp import *
 from collections import *
 
 EPSILON = 10e-6
-UEPSILON = 0.9
+UEPSILON = 1.0
 
 # given MDP and policy, calculate value (V) of each state. this is, in essence aproximate solution of
 # system of linear equations (which we could also do using elimination, but it is slower)
