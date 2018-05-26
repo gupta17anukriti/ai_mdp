@@ -16,7 +16,7 @@ def policy_evaluation(m: mdp_t, p: policy_t, niter = 1000, epsilon = EPSILON):
     V0 = defaultdict(float)  # Vopt(s, a) values, initially all 0
     N = m.size()  # number of states
 
-    # return state by it's index
+    # return state by its index
     def S(i):
         return m.get_state(i)
 
@@ -50,7 +50,7 @@ def value_iterator(m: mdp_t, niter = 1000, epsilon = EPSILON):
         discount = m.discount()
         return sum(p * (r + (discount * Vopt(sn))) for p, r, sn in m.transitions(s, a))
 
-    # return state by it's index
+    # return state by its index
     def S(i):
         return m.get_state(i)
 
