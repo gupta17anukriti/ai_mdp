@@ -1,5 +1,6 @@
 import mdp
 import random
+import mdp_utils as mu
 
 # convert episode array to string (for debugging and output)
 def episode_to_str(m, e, rounding = 2, add_utility = True):
@@ -47,3 +48,17 @@ def multi_choise(probs):
 # returns random value from array (uniformly distributed)
 def random_choice(arr):
     return arr[random.randint(0, len(arr) - 1)]
+
+def run(m: mdp.mdp_t, p, msg):
+    return mu.run_with_policy(m, p, msg, 10000)
+
+def separator(msg):
+    print("\n===========================================================")
+    print(msg)
+
+def dictprn(d):
+    print('  ', end='')
+    for k, v in sorted(d.items()):
+        print(k, end=': ')
+        print(v, end=', ')
+    print("")

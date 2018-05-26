@@ -28,4 +28,8 @@ def to_matrix(m: mdp_t, p: policy_t):
 
 def policy_evaluation(m: mdp_t, p: policy_t):
     A, b = to_matrix(m, p)
-    return np.linalg.solve(A, b)
+    d = defaultdict(float)
+    sol = np.linalg.solve(A, b)
+    for i in range(len(sol)):
+        d[m.get_state(i)] = sol[i]
+    return d

@@ -5,6 +5,7 @@ import time
 import mdp_aprox as mdpa
 import mdp_iter as mdpi
 import mdp_gauss as mg
+import mdp_utils as mu
 
 class volcano_crossing_t(mdp.mdp_t):
     def __init__(self, slip = 0.1, disc = 1.0):
@@ -59,40 +60,45 @@ class volcano_crossing_t(mdp.mdp_t):
     def size(self):
         return self.shape[0] * self.shape[1]
 
+def run(m: mdp.mdp_t, p, msg):
+    return mu.run(m, p, msg, 10000)
+
+def title(msg):
+    mu.separator(msg)
+
 if __name__ == '__main__':
     random.seed(time.time())
     m = volcano_crossing_t()
-    iters = 1000
+    iters =20000
 
-    print("\n\nvalue iterator policy (determine best policy based on full model):")
+
+    title("Use value iterator algorithm to determine optimal policy")
     pd = mdpi.value_iterator(m)
-    print(pd)
+    optimal_policy = mdp.dict_policy_t(m, pd)
+    mu.dictprn(pd)
 
-    print("\npolicy evaluation (based on policy, determine value for each state):")
-    print(mdpi.policy_evaluation(m, mdp.dict_policy_t(m, pd), iters))
+    print("\nUse policy evaluation algorithm, based on determined above optimal policy, to determine its value of each state:")
+    mu.dictprn(mdpi.policy_evaluation(m, optimal_policy, iters))
 
     print("\npolicy evaluation using Gaussian elimination (based on policy, determine value for each state):")
-    print(mg.policy_evaluation(m, mdp.dict_policy_t(m, pd)))
+    mu.dictprn(mg.policy_evaluation(m, optimal_policy))
 
-    print("\n==========================")
-
-    print("\n\n\n")
-    policy = mdp.random_policy_t(m)
-    mdp_utils.run_with_policy(m, policy, 'random policy', iters)
+    title("Approximate model with monte-carlo model based algorithm based using episode from random policy")
+    rand_policy = mdp.random_policy_t(m)
 
     print("\nmodel based monte-carlo (based on some episodes estimate (approximate probabilities and rewards) mdp model):")
-    ea = mdp_utils.run_with_policy(m, policy, '', iters)
+    ea = mdp_utils.run_with_policy(m, rand_policy, '', iters)
     me = mdpa.approximate_model(ea, m.start_state(), m.discount())
     print("\nnow, having estimation of model run value iterator and determine approximated best policy:")
     pe = mdpi.value_iterator(me)
-    print(pe)
+    mu.dictprn(pe)
     print("\npolicy evaluation (based on policy, determine value for each state):")
-    print(mdpi.policy_evaluation(me, mdp.dict_policy_t(me, pe), iters))
+    mu.dictprn(mdpi.policy_evaluation(me, mdp.dict_policy_t(me, pe), iters))
 
     # compare policies to see if we have a match
-    print("now we compare model based policy and model based monte-carlo policy. they should match:")
+    print("\nCompare model based policy and model based monte-carlo policy:")
     failed = mdp_utils.compare_dictionaries(pd, pe)
     if failed:
-        print("Monte Carlo estimation FAILED")
+        print("different")
     else:
-        print("Monte Carlo estimation succeeded")
+        print("same")

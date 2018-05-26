@@ -2,7 +2,7 @@ import mdp
 import random
 import time
 import mdp_iter as imdp
-import mdp_utils
+import mdp_utils as mu
 import mdp_aprox as mc
 import mdp_gauss as mg
 
@@ -43,28 +43,40 @@ class quit_policy_t(mdp.policy_t):
     def action(self, s):
         return 'quit'
 
+def run(m: mdp.mdp_t, p: quit_policy_t, msg):
+    return mu.run(m, p, msg, 10000)
+
+def title(msg):
+    mu.separator(msg)
+
 if __name__ == '__main__':
     random.seed(time.time())
     m = stay_quit_t()
-    mdp_utils.run_with_policy(m, mdp.random_policy_t(m), 'random policy (should be close to 10.5)', 10000)
-    mdp_utils.run_with_policy(m, stay_policy_t(m), '<stay> policy (should be close to 12)', 10000)
-    mdp_utils.run_with_policy(m, quit_policy_t(m), '<quit> policy (must be exactly 10)', 10000)
+    stay_policy = stay_policy_t(m)
+    quit_policy = quit_policy_t(m)
+    rand_policy = mdp.random_policy_t(m)
 
+    title("Run many episodes for a policy and find average utility")
+    run(m, rand_policy, 'random policy (should be close to 10.5)')
+    run(m, stay_policy, '<stay> policy (should be close to 12)')
+    run(m, quit_policy, '<quit> policy (must be exactly 10)')
+
+    title("Calculate utility for policy using policy evaluation algorithm")
     # use policy evaluation to estimate utility of each policy
     print("\n<stay> policy evaluation (must be very close to 12):")
-    print(imdp.policy_evaluation(m, stay_policy_t(m)))
+    print(imdp.policy_evaluation(m, stay_policy))
     print("\n<quit> policy evaluation (must be very close to 10):")
-    print(imdp.policy_evaluation(m, quit_policy_t(m)))
-    print("\nrandom policy evaluation (must be very close to 10.5):")
-    mdp_utils.run_with_policy(m, mdp.random_policy_t(m), '', 1000)
+    print(imdp.policy_evaluation(m, quit_policy))
 
+    title("Find optimal policy using value iterator algorithm")
     # calculate optimal policy
     print("\noptimal policy for each state:")
     print(imdp.value_iterator(m))
 
+    title("Approximate transitions and rewards based on random policy")
     # calculate optimal policy
     print("\napproximate transitions/rewards and then do optimal policy evaluation")
-    ea = mdp_utils.run_with_policy(m, mdp.random_policy_t(m), '', 10000)
+    ea = run(m, rand_policy, '')
     me = mc.approximate_model(ea, 'in', 1.0)
     pme = imdp.value_iterator(me)
     print("\ncalculated policy:")
@@ -73,8 +85,8 @@ if __name__ == '__main__':
     print("\npolicy evaluation:")
     print(imdp.policy_evaluation(me, pe))
 
-    print("\nPolicy evaluation using Gaussian elimination")
-    print("Optimal policy (stay) :")
-    print(mg.policy_evaluation(m, stay_policy_t(m)))
-    print("Suboptimal policy (quit) :")
-    print(mg.policy_evaluation(m, quit_policy_t(m)))
+    title("Policy evaluation using Gaussian elimination")
+    print("\nOptimal policy (stay) :")
+    print(mg.policy_evaluation(m, stay_policy))
+    print("\nSuboptimal policy (quit) :")
+    print(mg.policy_evaluation(m, quit_policy))
