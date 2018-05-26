@@ -4,9 +4,10 @@ import mdp_utils
 import time
 import mdp_aprox as mdpa
 import mdp_iter as mdpi
+import mdp_gauss as mg
 
 class volcano_crossing_t(mdp.mdp_t):
-    def __init__(self, slip = 0.8, disc = 1.0):
+    def __init__(self, slip = 0.1, disc = 1.0):
         rows, cols = 3, 4
         rs = [(2, 0, 2, True), (0, 2, -50, True), (1, 2, -50, True), (0, 3, 20, True)] # [(row, col, reward, is_end)]
         map = [None] * rows
@@ -61,7 +62,7 @@ class volcano_crossing_t(mdp.mdp_t):
 if __name__ == '__main__':
     random.seed(time.time())
     m = volcano_crossing_t()
-    iters = 100000
+    iters = 1000
 
     print("\n\nvalue iterator policy (determine best policy based on full model):")
     pd = mdpi.value_iterator(m)
@@ -69,6 +70,11 @@ if __name__ == '__main__':
 
     print("\npolicy evaluation (based on policy, determine value for each state):")
     print(mdpi.policy_evaluation(m, mdp.dict_policy_t(m, pd), iters))
+
+    print("\npolicy evaluation using Gaussian elimination (based on policy, determine value for each state):")
+    print(mg.policy_evaluation(m, mdp.dict_policy_t(m, pd)))
+
+    print("\n==========================")
 
     print("\n\n\n")
     policy = mdp.random_policy_t(m)

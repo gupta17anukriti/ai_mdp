@@ -4,6 +4,7 @@ import time
 import mdp_iter as imdp
 import mdp_utils
 import mdp_aprox as mc
+import mdp_gauss as mg
 
 #
 # Simple game: at  initial  state  (s0)  we  have  2  actions  'stay' and 'quit', if we
@@ -72,3 +73,8 @@ if __name__ == '__main__':
     print("\npolicy evaluation:")
     print(imdp.policy_evaluation(me, pe))
 
+    print("\nPolicy evaluation using Gaussian elimination")
+    print("Optimal policy (stay) :")
+    print(mg.policy_evaluation(m, stay_policy_t(m)))
+    print("Suboptimal policy (quit) :")
+    print(mg.policy_evaluation(m, quit_policy_t(m)))
